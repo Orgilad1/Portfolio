@@ -128,7 +128,7 @@ ORDER BY TotalPopulation DESC;
 
 
 
--- Which freedom category's countries pullotes more in total?
+-- Which freedom category's countries pullote more in total?
 SELECT [Free].[freedom in the world 2023] AS FreedomCategory, SUM([Co2-Emissions]) AS TotalCo2Emissions
 FROM [dbo].[Freedom Index] AS Free
 INNER JOIN [dbo].[Economy and Info] AS Eco ON Free.Country = Eco.Country
@@ -158,7 +158,7 @@ Order by AvgCountryPopulation desc
 
 
 
--- And how would the average population of the countries look if we take out the 2 most populated countries in the world - China and India?
+-- And how would the average population of the countries look like if we take out the 2 most populated countries in the world - China and India?
 
 WITH CTE_FreedomPopulation AS (
 SELECT 
@@ -207,34 +207,10 @@ ORDER BY AvgLifeExpect DESC
 
 
 
+
 -- How does the urban population percentage of countries affect their wealth?
--- Let's separate the countries into 3 different groups acording to the percentage of urban population and compare the average GDP per capita of each group:
-
-WITH CTE_UrbanPercentage AS 
-(SELECT 
-(Urban_population/Population)*100 as UrbanPopPercentage,
-(GDP/Population) as GDPPerCapita,
-CASE
-WHEN (Urban_population/Population)*100 < 40 THEN 'Less than 40%'
-WHEN (Urban_population/Population)*100 >= 40 AND (Urban_population/Population)*100 <= 70 THEN 'Between 40% and 70%'
-WHEN (Urban_population/Population)*100 > 70 THEN 'Above 70%'
-ELSE 'Unknown'
-END AS UrbanPopGroup
-FROM 
-[dbo].[Population Education Health] as Pop
-INNER JOIN [dbo].[Economy and Info] AS Eco ON Pop.Country = Eco.Country
-)
-SELECT 
-UrbanPopGroup,
-AVG(GDPPerCapita) AS AvgGDPPerCapita
-FROM CTE_UrbanPercentage
-WHERE UrbanPopPercentage IS NOT NULL
-GROUP BY UrbanPopGroup
-ORDER BY AvgGDPPerCapita DESC
-
-
-
--- And for more accuracy with weighted average calculation, taking into consideration the population size of each country:
+-- Let's separate the countries to 3 different groups acording to the percentage of urban population (below 40%, between 40%-70%, above 70%). 
+-- Now Let's compare the average GDP per capita of each group, with weighted average calculation (taking into consideration the population size of each country).
 
 WITH CTE_UrbanPercentage AS(
 SELECT 
@@ -262,8 +238,11 @@ GROUP BY UrbanPopGroup
 ORDER BY WeightedAvgGDPPerCapita DESC
 
 
+
+
+
 -- Which freedom category has countries that pollute the most per capita, taking into concideration the population size of each country?
--- Are the more free countries pollute more on average?
+-- Do the more free countries pollute more on average?
 
 
 WITH CTE_Co2EmissionsPerCapita AS (
@@ -302,4 +281,29 @@ SUM([Population]*GDPPerCapita)/SUM([Population]) AS AverageGdpPerCapita
 FROM CTE_GDPCap
 GROUP BY [freedom in the world 2023]
 ORDER BY AverageGdpPerCapita Desc
+
+
+
+
+
+-- Countries from which REGIME TYPE pollute more per capita on average, taking into concideration the population size of each country?
+-- Do more democratic countries pollute more on average?
+
+WITH CTE_Co2EmissionsPerCapita AS (
+SELECT 
+[Free].[Democracy Index 2023] AS RegimeType,
+AVG([Co2-Emissions]/Population) as Co2PerCapita,
+SUM(Population) AS TotalPopulation
+FROM 
+[dbo].[Freedom Index] AS Free
+INNER JOIN [dbo].[Economy and Info] AS Eco ON Free.Country = Eco.Country
+INNER JOIN [dbo].[Population Education Health] AS Pop ON Eco.Country = Pop.Country
+GROUP BY [Free].[Democracy Index 2023]
+)
+SELECT RegimeType,
+SUM(Co2PerCapita*TotalPopulation)/SUM(TotalPopulation) AS AverageCo2PerCapita
+FROM CTE_Co2EmissionsPerCapita
+GROUP BY RegimeType
+ORDER BY AverageCo2PerCapita DESC
+
 
