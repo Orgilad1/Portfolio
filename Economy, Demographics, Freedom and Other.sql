@@ -286,7 +286,7 @@ ORDER BY AverageGdpPerCapita Desc
 
 
 
--- Countries from which REGIME TYPE pollute more per capita on average, taking into concideration the population size of each country?
+-- Countries of which REGIME TYPE pollute more per capita on average, taking into concideration the population size of each country?
 -- Do more democratic countries pollute more on average?
 
 WITH CTE_Co2EmissionsPerCapita AS (
